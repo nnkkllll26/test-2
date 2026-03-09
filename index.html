@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Untuk Yulita</title>
+
+<style>
+/* --- Reset & Base --- */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font lebih modern */
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#ff7eb3,#ff758c);
+overflow:hidden;
+text-align:center;
+color:white;
+}
+
+/* --- Canvas Kembang Api (DIPERBAIKI) --- */
+canvas{
+position:fixed;
+top:0;
+left:0;
+width: 100%;
+height: 100%;
+z-index: -1; /* PENTING: Memindahkan canvas ke belakang konten */
+pointer-events: none; /* Agar klik mouse bisa tembus ke amplop/tombol */
+}
+
+/* --- Halaman Awal --- */
+.start{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:20px;
+z-index: 10; /* Memastikan ini di depan */
+}
+
+.bouquet{
+font-size:120px;
+animation:float 3s infinite ease-in-out;
+}
+
+.envelope{
+font-size:70px; /* Sedikit lebih besar */
+cursor:pointer;
+transition: transform 0.3s ease-in-out;
+}
+
+.envelope:hover{
+transform:scale(1.2) rotate(5deg);
+}
+
+@keyframes float{
+0%{transform:translateY(0)}
+50%{transform:translateY(-20px)}
+100%{transform:translateY(0)}
+}
+
+/* --- Halaman Isi --- */
+.content{
+display:none;
+max-width:650px;
+width: 90%; /* Agar responsif di HP */
+padding:40px;
+background:rgba(255,255,255,0.1); /* Lebih transparan */
+backdrop-filter:blur(15px);
+border-radius:25px;
+border: 1px solid rgba(255,255,255,0.2);
+box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+z-index: 10;
+animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+h1{ font-size: 2.5rem; margin-bottom: 5px; }
+h2{ font-size: 2rem; margin-bottom: 20px; color: #ffe0e6;}
+
+.nick-tehgelas {
+color: #ffe0e6;
+font-weight: bold;
+border-bottom: 2px dotted #ffe0e6;
+}
+
+button{
+margin-top:25px;
+padding:12px 30px;
+border:none;
+border-radius:25px;
+background:white;
+color:#ff4b7d;
+font-weight:bold;
+font-size: 1rem;
+cursor:pointer;
+transition: 0.3s;
+}
+
+button:hover{
+background: #ffe0e6;
+transform: scale(1.05);
+}
+
+.letter{
+display:none;
+margin-top:30px;
+padding-top: 20px;
+border-top: 1px solid rgba(255,255,255,0.2);
+line-height:1.8;
+font-size: 1.1rem;
+text-align: left;
+}
+
+/* --- Hearts Animation --- */
+.heart{
+position:absolute;
+font-size:25px;
+z-index: 1; /* Di depan canvas, di belakang content */
+animation:heartFloat 6s linear infinite;
+opacity: 0;
+}
+
+@keyframes heartFloat{
+0%{transform:translateY(100vh) rotate(0deg); opacity:0;}
+10%{opacity:1;}
+90%{opacity:1;}
+100%{transform:translateY(-20vh) rotate(360deg); opacity:0;}
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<div class="start" id="start">
+<div class="bouquet">💐</div>
+<p style="font-size: 1.2rem; margin-bottom: 10px;">Hai, ada surat buat kamu!</p>
+<p>Klik suratnya untuk membuka</p>
+<div class="envelope" onclick="openLetter()">✉️</div>
+</div>
+
+<div class="content" id="content">
+<h1>🎂 Happy Birthday</h1>
+<h2>Yulita 🎂</h2>
+
+<p style="font-size: 1.2rem;">
+Selamat ulang tahun untuk Yulita,<br>
+alias <span class="nick-tehgelas">Tehgelas ☕</span>
+</p>
+
+<button onclick="showLetter()">Buka Surat 💌</button>
+
+<div class="letter" id="letter">
+<p>
+Ciee, makin tua aja udh kepala dua kwkkwk,<br><br>
+
+Semoga di umur yang bertambah ini diberikan IPK yang bertambah tinggi,
+diberikan kekuatan dan kebahagian buat menjalani perkuliahan hingga
+mendapatkan tambahan dibelakang nama nanti biar ga satu kata lagi.<br><br>
+
+Trus semoga Om Burhan diberikan kesehatan dan mendaptkan hidayah
+buat baik ke anak-anaknya. Amin!
+</p>
+</div>
+
+<audio id="music" loop>
+<source src="https://www2.cs.uic.edu/~i101/SoundFiles/HappyBirthday.mid" type="audio/midi">
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_1456a646ac.mp3" type="audio/mpeg"> </audio>
+
+</div>
+
+<script>
+
+/* --- Buka Halaman Utama --- */
+function openLetter(){
+document.getElementById("start").style.display="none";
+document.getElementById("content").style.display="block";
+
+// Memutar musik (tergantung browser, jika diblokir user harus klik tombol lain kali)
+let music = document.getElementById("music");
+music.play().catch(error => {
+console.log("Autoplay musik diblokir browser, diputar setelah klik tombol lain.");
+// Jika gagal autoplay, musik akan dicoba diputar saat tombol "Buka Surat" diklik.
+});
+
+createHearts();
+createFireworks();
+}
+
+/* --- Buka Surat --- */
+function showLetter(){
+document.getElementById("letter").style.display="block";
+// Coba putar musik lagi jika autoplay gagal
+document.getElementById("music").play();
+}
+
+/* --- Hearts (DIPERBAIKI) --- */
+function createHearts(){
+setInterval(()=>{
+let heart=document.createElement("div");
+heart.className="heart";
+// Acak emoji
+let emojis = ["❤️", "💖", "☕", "✨"];
+heart.innerHTML= emojis[Math.random() > 0.8 ? Math.floor(Math.random()*emojis.length) : 0]; // Lebih sering hati
+
+heart.style.left=Math.random()*100+"vw";
+// Acak ukuran
+let size = 15 + Math.random() * 20;
+heart.style.fontSize = size + "px";
+// Acak durasi
+heart.style.animationDuration = (4 + Math.random() * 4) + "s";
+
+document.body.appendChild(heart);
+
+setTimeout(()=>{
+heart.remove()
+},8000)
+
+},400) // Sedikit lebih cepat memunculkan hati
+}
+
+/* --- Fireworks (DIPERBAIKI & BERWARNA) --- */
+const canvas=document.getElementById("fireworks");
+const ctx=canvas.getContext("2d");
+
+// Set canvas size
+function setCanvasSize() {
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+}
+setCanvasSize();
+window.addEventListener('resize', setCanvasSize); // Responsif saat resize
+
+let particles=[];
+
+function createFireworks(){
+setInterval(()=>{
+// Posisi meledak (di area atas)
+let x=Math.random()*canvas.width;
+let y=Math.random()*(canvas.height * 0.4) + (canvas.height * 0.1); // Antara 10% - 50% tinggi layar
+// Warna acak (HSL agar cerah)
+let hue = Math.random() * 360;
+let color = `hsl(${hue}, 100%, 60%)`;
+
+// Buat ledakan
+for(let i=0;i<80;i++){ // Lebih banyak partikel
+particles.push({
+x:x,
+y:y,
+vx:(Math.random()-0.5)*(6 + Math.random()*4), // Kecepatan X acak
+vy:(Math.random()-0.5)*(6 + Math.random()*4), // Kecepatan Y acak
+alpha:1,
+color: color
+})
+}
+}, 800) // Kecepatan ledakan baru
+}
+
+function animate(){
+requestAnimationFrame(animate);
+
+// Hapus canvas setiap frame (transparan agar gradient body terlihat)
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+particles.forEach((p,i)=>{
+// Gerakan
+p.x+=p.vx;
+p.y+=p.vy;
+p.vy+=0.04; // TAMBAHKAN GRAVITASI KECIL
+p.alpha-=0.012; // Sedikit lebih cepat pudar
+
+// Gambar partikel
+ctx.save();
+ctx.globalAlpha = p.alpha;
+ctx.fillStyle= p.color;
+ctx.beginPath();
+ctx.arc(p.x,p.y, 2.5, 0, Math.PI*2); // Ukuran sedikit lebih kecil
+ctx.fill();
+ctx.restore();
+
+// Hapus partikel jika sudah pudar
+if(p.alpha<=0){
+particles.splice(i,1)
+}
+})
+}
+
+// Mulai loop animasi segera
+animate();
+
+</script>
+
+</body>
+</html>
